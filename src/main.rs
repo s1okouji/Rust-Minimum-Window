@@ -15,23 +15,25 @@ fn main() -> windows::core::Result<()> {
 
     unsafe {
         // 1. インスタンスハンドルの取得
-        let module = GetModuleHandleW(None)?;
+        let instance = GetModuleHandleW(None)?.into();
 
         // 2. ウィンドウクラスの定義
         let window_class = class_name;
         let wc: WNDCLASSW = WNDCLASSW {
             hCursor: LoadCursorW(None, IDC_ARROW)?,
-            hInstance: module.into(),
+            hInstance: instance,
             lpszClassName: window_class,
             style: CS_HREDRAW | CS_VREDRAW,
             lpfnWndProc: Some(wndproc),
             ..Default::default()
         };
 
+        // 3. ウィンドウクラスの登録
         if RegisterClassW(&wc) == 0 {
             return Err(Error::from_thread());
         }
 
+        // 4. ウィンドウの作成
         let hwnd = CreateWindowExW(
             WINDOW_EX_STYLE::default(),
             window_class,
@@ -43,7 +45,7 @@ fn main() -> windows::core::Result<()> {
             height,
             None,
             None,
-            Some(module.into()),
+            Some(instance),
             None,
         )?;
 
@@ -51,6 +53,8 @@ fn main() -> windows::core::Result<()> {
             return Err(Error::from_thread());
         }
 
+
+        // 5. メッセージループ
 
         // let mut msg = MSG::default();
         // while GetMessageW(&mut msg, None, 0, 0).as_bool() {
